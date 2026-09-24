@@ -26,7 +26,31 @@ print(data.shape)
 
 # Automatic sleep staging
 import matplotlib.pyplot as plt
-sls = yasa.SleepStaging(raw, eeg_name="LUEER-RUEER")
-hypno_pred = sls.predict()  # Returns a yasa.Hypnogram
-yasa.plot_hypnogram(hypno_pred);  # Plot
+psg_data = yasa.SleepStaging(raw, eeg_name="C3-M2")
+psg_hypno = psg_data.predict()  # Returns a yasa.Hypnogram
+zircadia_data = yasa.SleepStaging(raw, eeg_name="LUEER-RUEER")
+zircadia_hypno = zircadia_data.predict()  # Returns a yasa.Hypnogram
+# yasa.plot_hypnogram(hypno_pred);  # Plot
+# plt.show()
+
+
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
+y_actual = psg_hypno.hypno
+y_pred = zircadia_hypno.hypno
+
+# Make sure both arrays have the same length
+min_length = min(len(y_actual), len(y_pred))
+y_actual = y_actual[:min_length]
+y_pred = y_pred[:min_length]
+
+labels = ["Wake", "N1", "N2", "N3", "REM"]
+cm = confusion_matrix(y_actual, y_pred, labels=labels)
+
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+disp.plot()
+
+plt.title("Confusion Matrix: YASA vs Zircadia Sleep Staging")
+plt.xlabel("Zircadia Predicted Labels")
+plt.ylabel("PSG Actual Labels")
 plt.show()
