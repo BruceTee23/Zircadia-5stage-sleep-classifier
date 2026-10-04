@@ -1,0 +1,8 @@
+# Data base
+database/
+
+# Enviromnment
+*.env
+
+# Dependency directories
+.venv/
