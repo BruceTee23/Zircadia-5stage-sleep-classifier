@@ -50,7 +50,7 @@ cm = confusion_matrix(y_actual, y_pred, labels=labels)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
 disp.plot()
 
-plt.title("Confusion Matrix: YASA vs Zircadia Sleep Staging")
+plt.title("Confusion Matrix: PSG vs Zircadia Sleep Staging")
 plt.xlabel("Zircadia Predicted Labels")
 plt.ylabel("PSG Actual Labels")
 plt.show()
