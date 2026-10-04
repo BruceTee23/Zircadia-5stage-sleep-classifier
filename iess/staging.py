@@ -1,9 +1,15 @@
-"""Automatic sleep staging of in ear EEG data."""
+"""IESS - In Ear Sleep Staging"""
+
+import glob
+import logging
+import os
+import warnings
 
 import antropy as ant
 import logging
 import numpy as np
 import pandas as pd
+import joblib
 import mne
 from mne.filter import filter_data
 import scipy.signal as sp_sig
@@ -14,7 +20,7 @@ from yasa import sliding_window
 from yasa import bandpower_from_psd_ndarray
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("yasa")
+logger = logging.getLogger("iess")
 
 class InEarSleepStaging:
     def __init__(self, raw, eeg_name):
@@ -179,3 +185,82 @@ class InEarSleepStaging:
         rollp = features.rolling(window=4, min_periods=1).mean()
         rollp[rollp.columns] = robust_scale(rollp, quantile_range=(5, 95))
         rollp = rollp.add_suffix("_p2min_norm")
+
+        # Add to current set of features
+        features = features.join(rollc).join(rollp)
+
+        #######################################################################
+        # TEMPORAL + METADATA FEATURES AND EXPORT
+        #######################################################################
+
+        # Add temporal features and metadata using concat to avoid fragmentation
+        extra = {"time_hour": times / 3600, "time_norm": times / times[-1]}
+        features = pd.concat([features, pd.DataFrame(extra, index=features.index)], axis=1)
+
+        # Downcast float64 to float32 (to reduce size of training datasets)
+        cols_float = features.select_dtypes(np.float64).columns.tolist()
+        features[cols_float] = features[cols_float].astype(np.float32)
+
+        # Sort the column names here (same behavior as lightGBM)
+        features.sort_index(axis=1, inplace=True)
+
+        # Add to self
+        self._features = features
+        self.feature_name_ = self._features.columns.tolist()
+
+
+    def get_features(self):
+        """Extract features from data and return a copy of the dataframe.
+
+        Returns
+        -------
+        features : :py:class:`pandas.DataFrame`
+            Feature dataframe.
+        """
+        if not hasattr(self, "_features"):
+            self.fit()
+        return self._features.copy()
+
+
+    def _validate_predict(self, clf):
+            """Validate classifier."""
+            # Check that we're using exactly the same features in the data as in the classifier
+            # Note that clf.feature_name_ is only available in lightgbm>=3.0
+            f_diff = np.setdiff1d(clf.feature_name_, self.feature_name_)
+            if len(f_diff):
+                raise ValueError(
+                    "The following features are present in the "
+                    "classifier but not in the current features set:",
+                    f_diff,
+                )
+            f_diff = np.setdiff1d(
+                self.feature_name_,
+                clf.feature_name_,
+            )
+            if len(f_diff):
+                raise ValueError(
+                    "The following features are present in the "
+                    "current feature set but not in the classifier:",
+                    f_diff,
+                )
+
+
+    def _load_model(self, path_to_model):
+            """Load the relevant trained classifier."""
+            if path_to_model == "auto":
+                from pathlib import Path
+    
+                clf_dir = os.path.join(str(Path(__file__).parent), "classifiers/")
+                name = "clf_eeg"
+                # e.g. clf_eeg+eog+emg+demo_lgb_0.4.0.joblib
+                all_matching_files = glob.glob(clf_dir + name + "*.joblib")
+                # Find the latest file
+                path_to_model = np.sort(all_matching_files)[-1]
+            # Check that file exists
+            assert os.path.isfile(path_to_model), "File does not exist."
+            logger.info("Using pre-trained classifier: %s" % path_to_model)
+            # Load using Joblib
+            clf = joblib.load(path_to_model)
+            # Validate features
+            self._validate_predict(clf)
+            return clf
