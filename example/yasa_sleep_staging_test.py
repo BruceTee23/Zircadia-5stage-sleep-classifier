@@ -2,7 +2,7 @@
 import yasa
 # edf_path = yasa.fetch_sample("night_young.edf")
 # hypno_path = yasa.fetch_sample("night_young_hypno.csv")
-edf_path = "database/EDF Score tech 1 6-9-26.edf"
+edf_path = "../database/EDF Score tech 1 6-9-26.edf"
 
 # Data loading and preprocessing
 import mne
@@ -29,6 +29,8 @@ import matplotlib.pyplot as plt
 psg_data = yasa.SleepStaging(raw, eeg_name="C3-M2")
 psg_hypno = psg_data.predict()  # Returns a yasa.Hypnogram
 zircadia_data = yasa.SleepStaging(raw, eeg_name="LUEER-RUEER")
+features = zircadia_data.get_features() # Extract features
+features.to_csv("features.csv", index=False) # Save features to CSV
 zircadia_hypno = zircadia_data.predict()  # Returns a yasa.Hypnogram
 yasa.plot_hypnogram(zircadia_hypno);  # Plot
 plt.show()
