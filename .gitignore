@@ -6,3 +6,6 @@ database/
 
 # Dependency directories
 .venv/
+
+# Python cache
+__pycache__/

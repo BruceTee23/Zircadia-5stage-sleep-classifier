@@ -2,7 +2,7 @@
 import yasa
 # edf_path = yasa.fetch_sample("night_young.edf")
 # hypno_path = yasa.fetch_sample("night_young_hypno.csv")
-edf_path = "database/EDF Score tech 1 6-9-26.edf"
+edf_path = "../database/EDF Score tech 1 6-9-26.edf"
 
 # Data loading and preprocessing
 import mne
@@ -29,28 +29,30 @@ import matplotlib.pyplot as plt
 psg_data = yasa.SleepStaging(raw, eeg_name="C3-M2")
 psg_hypno = psg_data.predict()  # Returns a yasa.Hypnogram
 zircadia_data = yasa.SleepStaging(raw, eeg_name="LUEER-RUEER")
+features = zircadia_data.get_features() # Extract features
+features.to_csv("features.csv", index=False) # Save features to CSV
 zircadia_hypno = zircadia_data.predict()  # Returns a yasa.Hypnogram
-# yasa.plot_hypnogram(hypno_pred);  # Plot
-# plt.show()
-
-
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-
-y_actual = psg_hypno.hypno
-y_pred = zircadia_hypno.hypno
-
-# Make sure both arrays have the same length
-min_length = min(len(y_actual), len(y_pred))
-y_actual = y_actual[:min_length]
-y_pred = y_pred[:min_length]
-
-labels = ["Wake", "N1", "N2", "N3", "REM"]
-cm = confusion_matrix(y_actual, y_pred, labels=labels)
-
-disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
-disp.plot()
-
-plt.title("Confusion Matrix: PSG vs Zircadia Sleep Staging")
-plt.xlabel("Zircadia Predicted Labels")
-plt.ylabel("PSG Actual Labels")
+yasa.plot_hypnogram(zircadia_hypno);  # Plot
 plt.show()
+
+
+# from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
+# y_actual = psg_hypno.hypno
+# y_pred = zircadia_hypno.hypno
+
+# # Make sure both arrays have the same length
+# min_length = min(len(y_actual), len(y_pred))
+# y_actual = y_actual[:min_length]
+# y_pred = y_pred[:min_length]
+
+# labels = ["Wake", "N1", "N2", "N3", "REM"]
+# cm = confusion_matrix(y_actual, y_pred, labels=labels)
+
+# disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+# disp.plot()
+
+# plt.title("Confusion Matrix: PSG vs Zircadia Sleep Staging")
+# plt.xlabel("Zircadia Predicted Labels")
+# plt.ylabel("PSG Actual Labels")
+# plt.show()
