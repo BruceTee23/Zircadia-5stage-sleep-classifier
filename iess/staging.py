@@ -245,22 +245,22 @@ class InEarSleepStaging:
                 )
 
 
-    def _load_model(self, path_to_model):
-            """Load the relevant trained classifier."""
-            if path_to_model == "auto":
-                from pathlib import Path
+    # def _load_model(self, path_to_model):
+    #         """Load the relevant trained classifier."""
+    #         if path_to_model == "auto":
+    #             from pathlib import Path
     
-                clf_dir = os.path.join(str(Path(__file__).parent), "classifiers/")
-                name = "clf_eeg"
-                # e.g. clf_eeg+eog+emg+demo_lgb_0.4.0.joblib
-                all_matching_files = glob.glob(clf_dir + name + "*.joblib")
-                # Find the latest file
-                path_to_model = np.sort(all_matching_files)[-1]
-            # Check that file exists
-            assert os.path.isfile(path_to_model), "File does not exist."
-            logger.info("Using pre-trained classifier: %s" % path_to_model)
-            # Load using Joblib
-            clf = joblib.load(path_to_model)
-            # Validate features
-            self._validate_predict(clf)
-            return clf
+    #             clf_dir = os.path.join(str(Path(__file__).parent), "classifiers/")
+    #             name = "clf_eeg"
+    #             # e.g. clf_eeg+eog+emg+demo_lgb_0.4.0.joblib
+    #             all_matching_files = glob.glob(clf_dir + name + "*.joblib")
+    #             # Find the latest file
+    #             path_to_model = np.sort(all_matching_files)[-1]
+    #         # Check that file exists
+    #         assert os.path.isfile(path_to_model), "File does not exist."
+    #         logger.info("Using pre-trained classifier: %s" % path_to_model)
+    #         # Load using Joblib
+    #         clf = joblib.load(path_to_model)
+    #         # Validate features
+    #         self._validate_predict(clf)
+    #         return clf
